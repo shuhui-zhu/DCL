@@ -5,12 +5,13 @@ class GridSocialDilemmaEnv:
     NUM_AGENTS = 2
     NUM_ACTIONS = 2
     
-    def __init__(self, max_steps=16, grid_size=4, k=2, num_agents = 2, num_actions = 2):
+    def __init__(self, max_steps=16, grid_size=4, k=2, num_agents = 2, num_actions = 2, state_dim=2):
         super(GridSocialDilemmaEnv, self).__init__()
         self.max_steps = max_steps
         self.grid_size = grid_size
         self.num_agents = num_agents
         self.num_actions = num_actions
+        self.state_dim = state_dim
         self.conflict_level = k
 
         self.initial_position_agent_0 = np.identity(self.grid_size)[0]

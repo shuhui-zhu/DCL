@@ -10,8 +10,9 @@ class IteratedPrisonersDilemma:
     NUM_ACTIONS = 2
     NUM_STATES = 1 
 
-    def __init__(self, max_steps):
+    def __init__(self, max_steps, state_dim=2):
         self.max_steps = max_steps
+        self.state_dim = state_dim
         self.payout_mat = np.array([[-1., 0.], [-3., -2.]])
         self.dummy_state = np.array([[1., 0.]])
 
@@ -39,8 +40,9 @@ class IteratedPureConflict:
     NUM_ACTIONS = 2
     NUM_STATES = 1 
 
-    def __init__(self, max_steps):
+    def __init__(self, max_steps, state_dim=2):
         self.max_steps = max_steps
+        self.state_dim = state_dim
         self.payout_mat = np.array([[0., 2.], [-1., 0.]])
         self.dummy_state = np.array([[1., 0.]])
 
