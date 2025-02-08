@@ -11,7 +11,7 @@ class Repeated_Game_Trainer(object):
         self.N_agents = N_agents
         self.discount_factor = gamma
         self.mega_step = mega_step
-        self.agents = [agent_class(epsilon=epsilon,epsilon_decay=epsilon_decay,perturb=perturb,with_constraints=with_constraints, gamma = gamma, num_agents=N_agents ,state_dim=2 ,action_dim=self.env.NUM_ACTIONS, mega_step=mega_step, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
+        self.agents = [agent_class(perturb=perturb,with_constraints=with_constraints, gamma = gamma, num_agents=N_agents ,state_dim=2 ,action_dim=self.env.NUM_ACTIONS, mega_step=mega_step, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
         self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=2,proposal_dim=self.env.NUM_ACTIONS*mega_step,commitment_dim=2,action_dim=self.env.NUM_ACTIONS*mega_step,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size

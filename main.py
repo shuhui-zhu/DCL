@@ -60,6 +60,9 @@ if __name__ == '__main__':
     mega_step = parser.parse_args().mega_step
     num_iter_per_batch = parser.parse_args().num_iter_per_batch
     grid_size = parser.parse_args().grid_size
+    epsilon = parser.parse_args().epsilon
+    epsilon_decay = parser.parse_args().epsilon_decay
+    perturb = parser.parse_args().perturb
     
     assert batch_size % max_steps == 0  # batch_size should be divisible by max_steps
 
@@ -80,14 +83,16 @@ if __name__ == '__main__':
                                         hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor,\
                                         with_constraints = with_constraints, buffer_length=batch_size, num_iter_per_batch=num_iter_per_batch,\
                                         batch_size=batch_size, N_agents=2, N_episodes=N_episodes,\
-                                        is_entropy=is_entropy, entropy_coeff=entropy_coeff, entropy_coeff_decay=entropy_coeff_decay)
+                                        is_entropy=is_entropy, entropy_coeff=entropy_coeff, entropy_coeff_decay=entropy_coeff_decay,\
+                                        epsilon=epsilon, epsilon_decay=epsilon_decay, perturb=perturb)
     elif game_name == 'Grid':
         trainer = Grid_Game_Trainer(env=environment, agent_class=DCL_Agent_Grid_Game, gamma=gamma,\
                                     max_steps=max_steps,temperature=temperature, temperature_decay=temperature_decay,\
                                     hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor,\
                                     with_constraints = with_constraints, buffer_length=batch_size, num_iter_per_batch=num_iter_per_batch,\
                                     batch_size=batch_size, N_agents=2, N_episodes=N_episodes, grid_size=grid_size,\
-                                    is_entropy=is_entropy, entropy_coeff=entropy_coeff, entropy_coeff_decay=entropy_coeff_decay)
+                                    is_entropy=is_entropy, entropy_coeff=entropy_coeff, entropy_coeff_decay=entropy_coeff_decay,\
+                                    epsilon=epsilon, epsilon_decay=epsilon_decay, perturb=perturb)
     else:
         raise ValueError("Invalid game name")
     

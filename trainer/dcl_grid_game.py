@@ -5,12 +5,12 @@ import wandb
 
 class Grid_Game_Trainer(object):
     def __init__(self, env, agent_class, N_agents, N_episodes, with_constraints, buffer_length, max_steps, batch_size,temperature,num_iter_per_batch,
-                 hidden_dim, lr_critic, lr_actor, gamma,is_entropy, entropy_coeff, entropy_coeff_decay,temperature_decay,grid_size,
+                 hidden_dim, lr_critic, lr_actor, gamma,is_entropy, entropy_coeff, entropy_coeff_decay,temperature_decay,grid_size, epsilon, perturb, epsilon_decay,
                  explore=True):
-        self.env = env(max_steps=max_steps, grid_size=grid_size, k=2)
+        self.env = env(max_steps=max_steps, grid_size=grid_size)
         self.N_agents = N_agents
         self.discount_factor = gamma
-        self.agents = [agent_class(with_constraints=with_constraints, gamma = gamma, grid_size=grid_size, num_agents=N_agents,action_dim=self.env.NUM_ACTIONS, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
+        self.agents = [agent_class(perturb=perturb, with_constraints=with_constraints, gamma = gamma, grid_size=grid_size, num_agents=N_agents,action_dim=self.env.NUM_ACTIONS, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
         self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=grid_size*N_agents,proposal_dim=self.env.NUM_ACTIONS,commitment_dim=2,action_dim=self.env.NUM_ACTIONS,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size
@@ -21,6 +21,8 @@ class Grid_Game_Trainer(object):
         self.entropy_coeff = entropy_coeff
         self.entropy_coeff_decay = entropy_coeff_decay
         self.returns = []
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
 
     def onehot_to_int(self, onehot):
         """
@@ -86,7 +88,13 @@ class Grid_Game_Trainer(object):
                         agent.update_unconstrained_policy(states, commitments[i], commitments[1-i], actions[i], actions[1-i], self.entropy_coeff)        
                         agent.update_commitment_policy(states, proposals[i], proposals[1-i], commitments[i], commitments[1-i], actions[i], actions[1-i], self.entropy_coeff)
                         agent.update_proposal_policy(states, self.entropy_coeff)
-                    self.entropy_coeff = np.maximum(0.1, self.entropy_coeff - self.entropy_coeff_decay)
+
+                    wandb.log({"entropy_coeff":self.entropy_coeff})
+                    self.entropy_coeff = np.maximum(0.0, self.entropy_coeff - self.entropy_coeff_decay)
+                    wandb.log({"epsilon":self.epsilon})
+                    if (epi_idx+1)*self.max_steps/self.mega_step /self.batch_size % 100 == 0:
+                        self.epsilon = np.maximum(0.0, self.epsilon - self.epsilon_decay)
+                        
                     wandb.log({"policy prob of cooperation for agent {}".format(i): agent.unconstrained_actor(states[0]).squeeze()[i].detach()})
                     for ii in range(2):
                         for jj in range(2):
