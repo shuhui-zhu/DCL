@@ -123,6 +123,14 @@ class DCL_Agent_Repeated_Games():
     def is_commit(self, commitment):
         unsqueezed_tensor = torch.tensor([0,1],dtype=self.dtype).unsqueeze(1)
         return torch.matmul(commitment, unsqueezed_tensor)**4 # input: one-hot; output: [1] if commit, [0] if not commit
+    
+    def int_to_onehot(self, integer):
+        """
+        Convert integer proposal to one-hot proposal
+        """
+        onehot = torch.zeros(1,self.action_dim, dtype=torch.float32)
+        onehot[0][integer] = 1
+        return onehot
 
     # def calculate_unconstrained_value(self, state, action_probs, coplayer_action_probs):
     #     v = torch.zeros(len(state), dtype=torch.float64, device=self.device)

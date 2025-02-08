@@ -64,7 +64,7 @@ class CriticNet(torch.nn.Module):
 
 
 class DCL_Agent_Grid_Game():
-    def __init__(self, temperature, hidden_dim, lr_critic, lr_actor, with_constraints, gamma, is_entropy, temperature_decay, action_dim, num_agents, grid_size=3, device="cpu"):
+    def __init__(self, temperature, hidden_dim, lr_critic, lr_actor, with_constraints, gamma, is_entropy, temperature_decay, action_dim, num_agents, grid_size, device="cpu"):
         self.device = device
         self.gamma = gamma
         self.with_constraints = with_constraints
@@ -124,17 +124,20 @@ class DCL_Agent_Grid_Game():
         unsqueezed_tensor = torch.tensor([0,1],dtype=self.dtype).unsqueeze(1)
         return torch.matmul(commitment, unsqueezed_tensor)**4 # input: one-hot; output: [1] if commit, [0] if not commit
 
-    def int_to_onehot(self, variable_int_list, k):
-        variable_onehot = torch.zeros(len(variable_int_list), k, dtype=self.dtype)
-        variable_onehot[range(len(variable_int_list)), variable_int_list] = 1
-        return variable_onehot
+    def int_to_onehot(self, integer):
+        """
+        Convert integer proposal to one-hot proposal
+        """
+        onehot = torch.zeros(1,self.action_dim, dtype=torch.float32)
+        onehot[0][integer] = 1
+        return onehot
     
     # def calculate_unconstrained_value(self, state, action_probs, coplayer_action_probs):
     #     v = torch.zeros(len(state), dtype=torch.float64, device=self.device)
     #     for a_i in range(2):
     #             for a_j in range(2):
-    #                 action_self_onehot_i = self.int_to_onehot(variable_int_list=[a_i], k=2, device=self.device).expand(len(state),-1)
-    #                 action_coplayer_onehot_i = self.int_to_onehot([a_j], k=2, device=self.device).expand(len(state),-1)
+    #                 action_self_onehot_i = self.int_to_onehot(a_i).expand(len(state),-1)
+    #                 action_coplayer_onehot_i = self.int_to_onehot(a_j).expand(len(state),-1)
     #                 q_i = self.critic(torch.cat((state, action_self_onehot_i, action_coplayer_onehot_i),dim=1)).squeeze()
     #                 v += q_i * action_probs[:,a_i] * coplayer_action_probs[:,a_j]
     #     return v.detach()
@@ -143,14 +146,14 @@ class DCL_Agent_Grid_Game():
     #     v = torch.zeros(len(state), dtype=torch.float64, device=self.device)
     #     for m_i in range(2):
     #         for m_j in range(2):
-    #             proposal_self_onehot = self.int_to_onehot(variable_int_list=[m_i], k=2, device=self.device).expand(len(state),-1)
-    #             proposal_coplayer_onehot = self.int_to_onehot([m_j], k=2, device=self.device).expand(len(state),-1)
+    #             proposal_self_onehot = self.int_to_onehot(m_i).expand(len(state),-1)
+    #             proposal_coplayer_onehot = self.int_to_onehot(m_j).expand(len(state),-1)
     #             q_i = self.critic(torch.cat((state, proposal_self_onehot, proposal_coplayer_onehot),dim=1)).squeeze()
     #             v += q_i * proposal_probs[:,m_i] * coplayer_proposal_probs[:,m_j] * commitment_probs[:,1] * coplayer_commitment_probs[:,1]
     #     for a_i in range(2):
     #         for a_j in range(2):
-    #             action_self_onehot = self.int_to_onehot([a_i], k=2, device=self.device).expand(len(state),-1)
-    #             action_coplayer_onehot = self.int_to_onehot([a_j], k=2, device=self.device).expand(len(state),-1)
+    #             action_self_onehot = self.int_to_onehot(a_i).expand(len(state),-1)
+    #             action_coplayer_onehot = self.int_to_onehot(a_j).expand(len(state),-1)
     #             q_i = self.critic(torch.cat((state, action_self_onehot, action_coplayer_onehot),dim=1)).squeeze()
     #             v += q_i * (1-commitment_probs[:,1] * coplayer_commitment_probs[:,1]) * action_probs[:,a_i] * coplayer_action_probs[:,a_j]
     #     return v.detach()
