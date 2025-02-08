@@ -3,16 +3,15 @@ import torch
 from utility.buffer_class import ReplayBuffer
 import wandb
 
-class Grid_Game_Trainer:
+class Grid_Game_Trainer(object):
     def __init__(self, env, agent_class, N_agents, N_episodes, with_constraints, buffer_length, max_steps, batch_size,temperature,num_iter_per_batch,
                  hidden_dim, lr_critic, lr_actor, gamma,is_entropy, entropy_coeff, entropy_coeff_decay,temperature_decay,grid_size,
                  explore=True):
-        self.env = env(max_steps=max_steps, grid_size=grid_size)
+        self.env = env(max_steps=max_steps, grid_size=grid_size, k=2)
         self.N_agents = N_agents
         self.discount_factor = gamma
         self.agents = [agent_class(with_constraints=with_constraints, gamma = gamma, grid_size=grid_size, num_agents=N_agents,action_dim=self.env.NUM_ACTIONS, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
-        [self.agents[i].build_connection(self.agents[1-i]) for i in range(N_agents)] # build connection between agents
-        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=env.state_dim,proposal_dim=self.env.NUM_ACTIONS,commitment_dim=2,action_dim=self.env.NUM_ACTIONS,num_agents=N_agents)
+        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=grid_size*N_agents,proposal_dim=self.env.NUM_ACTIONS,commitment_dim=2,action_dim=self.env.NUM_ACTIONS,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size
         self.max_steps = max_steps
@@ -25,19 +24,19 @@ class Grid_Game_Trainer:
 
     def onehot_to_int(self, onehot):
         """
-        Convert one-hot action to integer action
+        Convert one-hot tensor to integer
         """
         int = torch.argmax(onehot[0]).item()
         return int
     
     def int_to_onehot(self, integer):
         """
-        Convert integer proposal to one-hot proposal
+        Convert integer to one-hot tensor
         """
-        onehot = torch.zeros(1,self.env.num_actions, dtype=torch.float32)
+        onehot = torch.zeros(1,self.env.num_actions)
         onehot[0][integer] = 1
         return onehot
-
+    
     def run_an_episode(self):
         """
         Each episode includes 1 step.
@@ -49,8 +48,8 @@ class Grid_Game_Trainer:
             m = [agent.get_proposal(state, explore=self.explore).detach() for agent in self.agents] # one-hot value
             c = [agent.get_commitment(state, m[i],m[1-i], explore=self.explore).detach() for i, agent in enumerate(self.agents)] # one-hot value, [[0,1]] is commitment, [[1,0]] is no commitment
             a = [agent.get_unconstrained_action(state, explore=self.explore).detach() for agent in self.agents] # one-hot value
-            is_mutual_commitment = self.agents[0].is_commit(c[0])*self.agents[1].is_commit(c[1]) # agent 0 and agent 1 both commit
 
+            is_mutual_commitment = self.agents[0].is_commit(c[0])*self.agents[1].is_commit(c[1]) # agent 0 and agent 1 both commit
             if is_mutual_commitment:
                 actions = [self.onehot_to_int(m_i) for m_i in m]
             else:
@@ -62,8 +61,10 @@ class Grid_Game_Trainer:
                             torch.tensor(rewards[0],dtype=self.dtype), torch.tensor(rewards[1],dtype=self.dtype), torch.tensor(next_state,dtype=self.dtype),
                             torch.tensor(done, dtype=self.dtype))
             state = torch.tensor(next_state,dtype=self.dtype)
+            
         self.replaybuffer.finish_an_episode()
         self.returns.append(accumulated_rewards)
+        return 
 
     def train(self):
         """
@@ -81,7 +82,7 @@ class Grid_Game_Trainer:
                 self.returns = []
                 for i, agent in enumerate(self.agents):
                     for _ in range(self.num_iter_per_batch): 
-                        agent.update_critic(states, proposals[i], proposals[1-i], actions[i], actions[1-i], is_mutual_commitments, returns[i]) # update critic first (according to MADDPG, SAC, etc.)
+                        agent.update_critic(states, proposals[i], proposals[1-i], actions[i], actions[1-i], is_mutual_commitments, returns[i], returns[1-i])
                         agent.update_unconstrained_policy(states, commitments[i], commitments[1-i], actions[i], actions[1-i], self.entropy_coeff)        
                         agent.update_commitment_policy(states, proposals[i], proposals[1-i], commitments[i], commitments[1-i], actions[i], actions[1-i], self.entropy_coeff)
                         agent.update_proposal_policy(states, self.entropy_coeff)
