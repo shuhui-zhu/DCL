@@ -5,14 +5,14 @@ import wandb
 
 class Repeated_Game_Trainer(object):
     def __init__(self, env, agent_class, N_agents, N_episodes, with_constraints, buffer_length, max_steps, batch_size, temperature, num_iter_per_batch,
-                 hidden_dim, lr_critic, lr_actor, gamma,is_entropy, entropy_coeff, entropy_coeff_decay, temperature_decay, mega_step,epsilon, perturb, epsilon_decay,
+                 hidden_dim, lr_critic, lr_actor, gamma,is_entropy, entropy_coeff, entropy_coeff_decay, temperature_decay, mega_step, epsilon,perturb, epsilon_decay,
                  explore=True):
         self.env = env(max_steps=max_steps)
         self.N_agents = N_agents
         self.discount_factor = gamma
         self.mega_step = mega_step
         self.agents = [agent_class(perturb=perturb,with_constraints=with_constraints, gamma = gamma, num_agents=N_agents ,state_dim=2 ,action_dim=self.env.NUM_ACTIONS, mega_step=mega_step, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
-        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=2,proposal_dim=self.env.NUM_ACTIONS*mega_step,commitment_dim=2,action_dim=self.env.NUM_ACTIONS*mega_step,num_agents=N_agents)
+        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=self.env.state_dim,proposal_dim=self.env.NUM_ACTIONS*mega_step,commitment_dim=2,action_dim=self.env.NUM_ACTIONS*mega_step,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size
         self.max_steps = max_steps
@@ -143,7 +143,7 @@ class Repeated_Game_Trainer(object):
             for epi_idx in range(self.N_episodes):
                 self.run_an_episode()
                 if (epi_idx+1)*self.max_steps/self.mega_step % self.batch_size == 0:
-                    states, proposals, commitments, is_mutual_commitments, actions, rewards, next_states, dones, returns = self.replaybuffer.sample(self.batch_size)                
+                    states, proposals, commitments, is_mutual_commitments, actions, rewards, next_states, dones, returns = self.replaybuffer.sample(self.batch_size)
                     mean_returns = np.mean(self.mega_returns, axis=0)
                     wandb.log({"social welfare": mean_returns.sum()})
                     wandb.log({"average return of agent 0": mean_returns[0]})
