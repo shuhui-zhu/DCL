@@ -340,4 +340,3 @@ class DCL_Agent_Grid_Game():
             critic_params_coplayer[layer].grad = critic_grads_coplayer[layer]
             critic_params_coplayer[layer].grad.data.clamp_(-1, 1)
         self.coplayer_critic_optimizer.step()
-        return

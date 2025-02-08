@@ -92,7 +92,7 @@ class Grid_Game_Trainer(object):
                     wandb.log({"entropy_coeff":self.entropy_coeff})
                     self.entropy_coeff = np.maximum(0.0, self.entropy_coeff - self.entropy_coeff_decay)
                     wandb.log({"epsilon":self.epsilon})
-                    if (epi_idx+1)*self.max_steps/self.mega_step /self.batch_size % 100 == 0:
+                    if (epi_idx+1)*self.max_steps /self.batch_size % 100 == 0:
                         self.epsilon = np.maximum(0.0, self.epsilon - self.epsilon_decay)
                         
                     wandb.log({"policy prob of cooperation for agent {}".format(i): agent.unconstrained_actor(states[0]).squeeze()[i].detach()})
@@ -105,4 +105,3 @@ class Grid_Game_Trainer(object):
                             else:
                                 wandb.log({"commitment prob for agent {} given [{},{}]".format(i,action_labels[1-ii],action_labels[jj]): agent.commit_actor(torch.cat((states[0].unsqueeze(dim=0), proposal_self_onehot, proposal_coplayer_onehot),dim=1)).detach().squeeze()[1].numpy()})
                     wandb.log({"proposal prob of cooperation for agent {}".format(i): agent.proposing_actor(states[0]).squeeze()[i].detach()})
-        return
