@@ -26,13 +26,16 @@ parser.add_argument("--hidden_dim", default=8, type=int) # Hidden dimension of t
 parser.add_argument("--lr_critic", default=7e-4, type=float) # Learning rate of the Critic
 parser.add_argument("--lr_actor", default=4e-4, type=float) # Learning rate of the Actor
 parser.add_argument("--temperature", default=10.0, type=float) # Temperature for the softmax
-parser.add_argument("--num_iter_per_batch", default=1, type=int) # Number of critic updates per iteration
-parser.add_argument("--is_entropy", default='y', type=str) # Entropy regularization
+parser.add_argument("--num_iter_per_batch", default=1, type=int) # Number of updates per iteration
+parser.add_argument("--is_entropy", default='y', type=str) # whether to use entropy regularization
 parser.add_argument("--entropy_coeff", default=1.0, type=float) # Entropy regularization coefficient
 parser.add_argument("--entropy_coeff_decay", default=0.0005, type=float) # Entropy regularization coefficient decay
 parser.add_argument("--temperature_decay", default=0.05, type=float) # Temperature decay
-parser.add_argument("--mega_step", default=1, type=int) # Number of steps to update the actor
+parser.add_argument("--mega_step", default=1, type=int)
 parser.add_argument('--grid_size', type=int, default=4)
+parser.add_argument("--epsilon", default=0.3, type=float) # epsilon for soft epsilon greedy
+parser.add_argument("--epsilon_decay", default=0.003, type=float)
+parser.add_argument("--perturb", default=1e-3, type=float) # perturbation for probs (avoid numerical issues)
 
 if __name__ == '__main__':
     const_flag = parser.parse_args().with_constraints
