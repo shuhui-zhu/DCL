@@ -11,9 +11,9 @@ class Repeated_Game_Trainer:
         self.N_agents = N_agents
         self.discount_factor = gamma
         self.mega_step = mega_step
-        self.agents = [agent_class(with_constraints=with_constraints, gamma = gamma, num_agents=N_agents ,state_dim=env.state_dim ,action_dim=self.env.NUM_ACTIONS, mega_step=mega_step, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
+        self.agents = [agent_class(with_constraints=with_constraints, gamma = gamma, num_agents=N_agents ,state_dim=self.env.state_dim ,action_dim=self.env.NUM_ACTIONS, mega_step=mega_step, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
         [self.agents[i].build_connection(self.agents[1-i]) for i in range(N_agents)] # build connection between agents
-        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=env.state_dim,proposal_dim=self.env.NUM_ACTIONS*mega_step,commitment_dim=2,action_dim=self.env.NUM_ACTIONS*mega_step,num_agents=N_agents)
+        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=self.env.state_dim,proposal_dim=self.env.NUM_ACTIONS*mega_step,commitment_dim=2,action_dim=self.env.NUM_ACTIONS*mega_step,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size
         self.max_steps = max_steps
@@ -184,6 +184,5 @@ class Repeated_Game_Trainer:
                         wandb.log({"proposal prob of (C,D) for agent {}".format(i): agent.proposing_actor(states[0]).squeeze()[1].detach()})
                         wandb.log({"proposal prob of (D,C) for agent {}".format(i): agent.proposing_actor(states[0]).squeeze()[2].detach()})
                         wandb.log({"proposal prob of (D,D) for agent {}".format(i): agent.proposing_actor(states[0]).squeeze()[3].detach()})
-                
                 # print("finish a update")
         return

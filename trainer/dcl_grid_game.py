@@ -12,7 +12,7 @@ class Grid_Game_Trainer:
         self.discount_factor = gamma
         self.agents = [agent_class(with_constraints=with_constraints, gamma = gamma, grid_size=grid_size, num_agents=N_agents,action_dim=self.env.NUM_ACTIONS, temperature=temperature,hidden_dim=hidden_dim, lr_critic=lr_critic, lr_actor=lr_actor, is_entropy=is_entropy, temperature_decay=temperature_decay) for _ in range(N_agents)] # initialize agents classes
         [self.agents[i].build_connection(self.agents[1-i]) for i in range(N_agents)] # build connection between agents
-        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=env.state_dim,proposal_dim=self.env.NUM_ACTIONS,commitment_dim=2,action_dim=self.env.NUM_ACTIONS,num_agents=N_agents)
+        self.replaybuffer = ReplayBuffer(max_length=buffer_length,gamma=gamma,state_dim=self.env.state_dim,proposal_dim=self.env.NUM_ACTIONS,commitment_dim=2,action_dim=self.env.NUM_ACTIONS,num_agents=N_agents)
         self.N_episodes = N_episodes
         self.batch_size = batch_size
         self.max_steps = max_steps
@@ -96,4 +96,5 @@ class Grid_Game_Trainer:
                             else:
                                 wandb.log({"commitment prob for agent {} given [{},{}]".format(i,action_labels[1-ii],action_labels[jj]): agent.commit_actor(torch.cat((states[0].unsqueeze(dim=0), proposal_self_onehot, proposal_coplayer_onehot),dim=1)).detach().squeeze()[1].numpy()})
                     wandb.log({"proposal prob of cooperation for agent {}".format(i): agent.proposing_actor(states[0]).squeeze()[i].detach()})
+                # print("finish an update")
         return

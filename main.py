@@ -17,7 +17,7 @@ os.environ['WANDB_MODE'] = 'disabled'
 parser = argparse.ArgumentParser()
 parser.add_argument('--gamma', type=float, default=1)
 parser.add_argument('--array_task_id', type=int, default=0)
-parser.add_argument('--with_constraints', type=str, default='n')
+parser.add_argument('--with_constraints', type=str, default='y')
 parser.add_argument('--game', type=str, default='IPD')
 parser.add_argument("--max_steps", default=1, type=int)
 parser.add_argument("--batch_size", default=128, type=int)
