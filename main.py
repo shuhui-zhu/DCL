@@ -33,8 +33,6 @@ parser.add_argument("--entropy_coeff_decay", default=0.0005, type=float) # Entro
 parser.add_argument("--temperature_decay", default=0.05, type=float) # Temperature decay
 parser.add_argument("--mega_step", default=1, type=int)
 parser.add_argument('--grid_size', type=int, default=4)
-parser.add_argument("--epsilon", default=0.3, type=float) # epsilon for soft epsilon greedy
-parser.add_argument("--epsilon_decay", default=0.003, type=float)
 parser.add_argument("--perturb", default=1e-3, type=float) # perturbation for probs (avoid numerical issues)
 
 if __name__ == '__main__':
