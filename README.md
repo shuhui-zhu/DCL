@@ -31,43 +31,43 @@ python main.py --game "your_game_name" --with_constraints "with_or_without_IC"
 
 ### Examples
 
-Follow the following examples for implementating DCL and DCL-IC. To reproduce results in  the paper [Learning to Negotiate via Voluntary  Commitment](https://github.com/shuhui-zhu/DCL), please use the hyperparameter set in supplementary materials (Appendix D). 
+Follow the examples for implementating DCL and DCL-IC. To reproduce results in  the paper [Learning to Negotiate via Voluntary  Commitment](https://github.com/shuhui-zhu/DCL), please use the hyperparameter set in supplementary materials (Appendix D). 
 
-#### Train DCL on Prisoner's Dilemma
+* Train DCL on Prisoner's Dilemma
 
-```
-python main.py --game "IPD" --with_constraints "n" --batch_size 128
-```
+  ```
+  python main.py --game "IPD" --with_constraints "n" --batch_size 128
+  ```
 
-#### Train DCL-IC on Prisoner's Dilemma 
+* Train DCL-IC on Prisoner's Dilemma 
 
-```
-python main.py --game "IPD" --with_constraints "y" --batch_size 128
-```
+  ```
+  python main.py --game "IPD" --with_constraints "y" --batch_size 128
+  ```
 
-#### Train DCL on Repeated Purely Conflicting Game
+* Train DCL on Repeated Purely Conflicting Game
 
-```
-python main.py --game "IPC" --with_constraints "n" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-```
+  ```
+  python main.py --game "IPC" --with_constraints "n" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
+  ```
 
-#### Train DCL-IC on Repeated Purely Conflicting Game
+* Train DCL-IC on Repeated Purely Conflicting Game
 
-```
-python main.py --game "IPC" --with_constraints "y" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-```
+  ```
+  python main.py --game "IPC" --with_constraints "y" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
+  ```
 
-#### Train DCL on Grid Game
+* Train DCL on Grid Game
 
-```
-python main.py --game "Grid" --with_constraints "n" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-```
+  ```
+  python main.py --game "Grid" --with_constraints "n" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
+  ```
 
-#### Train DCL-IC on Grid Game
+* Train DCL-IC on Grid Game
 
-```
-python main.py --game "Grid" --with_constraints "y" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-```
+  ```
+  python main.py --game "Grid" --with_constraints "y" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
+  ```
 
 ## Citation
 
@@ -76,8 +76,6 @@ If you want to cite this repository, please use the following citation:
 ```
 # Add Later
 ```
-
-
 
 ## License
 See [LICENSE](LICENSE).
