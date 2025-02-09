@@ -15,12 +15,12 @@ import os
 os.environ['WANDB_MODE'] = 'disabled'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--gamma', type=float, default=1)
-parser.add_argument('--array_task_id', type=int, default=0)
-parser.add_argument('--with_constraints', type=str, default='y')
-parser.add_argument('--game', type=str, default='IPD')
-parser.add_argument("--max_steps", default=1, type=int)
-parser.add_argument("--batch_size", default=128, type=int)
+parser.add_argument('--gamma', type=float, default=0.99) # Discount factor
+parser.add_argument('--array_task_id', type=int, default=0) # Array task id in slurm
+parser.add_argument('--with_constraints', type=str, default='y') # Whether to use IC constrains or not
+parser.add_argument('--game', type=str, default='IPD') # Game name
+parser.add_argument("--max_steps", default=1, type=int) # Number of steps in each episode
+parser.add_argument("--batch_size", default=128, type=int) # Batch size
 parser.add_argument("--N_iterations", default=10000, type=int) # Number of iterations to train the model
 parser.add_argument("--hidden_dim", default=8, type=int) # Hidden dimension of the neural network
 parser.add_argument("--lr_critic", default=7e-4, type=float) # Learning rate of the Critic
@@ -31,8 +31,8 @@ parser.add_argument("--is_entropy", default='y', type=str) # whether to use entr
 parser.add_argument("--entropy_coeff", default=1.0, type=float) # Entropy regularization coefficient
 parser.add_argument("--entropy_coeff_decay", default=0.0005, type=float) # Entropy regularization coefficient decay
 parser.add_argument("--temperature_decay", default=0.05, type=float) # Temperature decay
-parser.add_argument("--mega_step", default=1, type=int)
-parser.add_argument('--grid_size', type=int, default=4)
+parser.add_argument("--mega_step", default=1, type=int) # number of steps specified in a proposal
+parser.add_argument('--grid_size', default=4, type=int) # Grid size for the grid game
 parser.add_argument("--perturb", default=1e-3, type=float) # perturbation for probs (avoid numerical issues)
 
 if __name__ == '__main__':
