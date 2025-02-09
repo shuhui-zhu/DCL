@@ -1,5 +1,5 @@
 # Differentiable Commitment Learning
-This repository implements DCL ([AISTATS 2025](https://github.com/shuhui-zhu/DCL)) in the paper [Learning to Negotiate via Voluntary  Commitment](https://github.com/shuhui-zhu/DCL).
+This repository implements DCL ([AISTATS 2025](https://github.com/shuhui-zhu/DCL)) in our paper [Learning to Negotiate via Voluntary  Commitment](https://github.com/shuhui-zhu/DCL).
 
 ## Set Up
 
@@ -71,7 +71,7 @@ python main.py --game "Grid" --with_constraints "y" --max_steps 16 --mega_step 1
 
 ## Citation
 
-If you want to cite this repository accademic work, please use the following citation:
+If you want to cite this repository, please use the following citation:
 
 ```
 # Add Later
