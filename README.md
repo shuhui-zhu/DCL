@@ -80,5 +80,5 @@ If you want to cite this repository, please use the following citation:
 
 
 ## License
-
-SPDX-License-Identifier: MIT
+See [LICENSE](LICENSE).
+SPDX-License-Identifier: MIT.
