@@ -74,7 +74,21 @@ Follow the examples for implementating DCL and DCL-IC. To reproduce results in  
 If you want to cite this repository, please use the following citation:
 
 ```
-# Add Later
+@InProceedings{pmlr-v258-zhu25b,
+  title = 	 {Learning to Negotiate via Voluntary Commitment},
+  author =       {Zhu, Shuhui and Wang, Baoxiang and Subramanian, Sriram Ganapathi and Poupart, Pascal},
+  booktitle = 	 {Proceedings of The 28th International Conference on Artificial Intelligence and Statistics},
+  pages = 	 {1459--1467},
+  year = 	 {2025},
+  editor = 	 {Li, Yingzhen and Mandt, Stephan and Agrawal, Shipra and Khan, Emtiyaz},
+  volume = 	 {258},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {03--05 May},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v258/main/assets/zhu25b/zhu25b.pdf},
+  url = 	 {https://proceedings.mlr.press/v258/zhu25b.html},
+  abstract = 	 {The partial alignment and conflict of autonomous agents lead to mixed-motive scenarios in many real-world applications. However, agents may fail to cooperate in practice even when cooperation yields a better outcome. One well known reason for this failure comes from non-credible commitments. To facilitate commitments among agents for better cooperation, we define Markov Commitment Games (MCGs), a variant of commitment games, where agents can voluntarily commit to their proposed future plans. Based on MCGs, we propose a learnable commitment protocol via policy gradients. We further propose incentive-compatible learning to accelerate convergence to equilibria with better social welfare. Experimental results in challenging mixed-motive tasks demonstrate faster empirical convergence and higher returns for our method compared with its counterparts. Our code is available at \url{https://github.com/shuhui-zhu/DCL.}}
+}
 ```
 
 ## License
