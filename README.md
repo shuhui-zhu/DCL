@@ -31,7 +31,7 @@ python main.py --game "your_game_name" --with_constraints "with_or_without_IC"
 
 ### Examples
 
-Follow the examples for implementating DCL and DCL-IC. To reproduce results in  the paper [Learning to Negotiate via Voluntary  Commitment](https://github.com/shuhui-zhu/DCL), please use the hyperparameter set in supplementary materials (Appendix D). 
+Follow the examples for implementating DCL and DCL-IC. To reproduce results in  the paper [Learning to Negotiate via Voluntary  Commitment](https://arxiv.org/abs/2503.03866), please use the hyperparameter set in supplementary materials (Appendix D). 
 
 * Train DCL on Prisoner's Dilemma
 
