@@ -2,68 +2,11 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-class ProposalActorNet(torch.nn.Module):
-    def __init__(self, input_dim, output_dim,hidden_dim):
-        super(ProposalActorNet, self).__init__()
-        self.layer1 = torch.nn.Linear(in_features=input_dim, out_features=hidden_dim)
-        self.layer2 = torch.nn.Linear(in_features=hidden_dim, out_features=hidden_dim)
-        self.outputlayer = torch.nn.Linear(in_features=hidden_dim, out_features=output_dim)
-    def forward(self, x):
-        x = self.layer1(x)
-        x = torch.nn.ReLU()(x)
-        x = self.layer2(x)
-        x = torch.nn.ReLU()(x)
-        x = self.outputlayer(x)
-        x = torch.nn.Softmax(dim=-1)(x)
-        return x
-    
-class CommitActorNet(torch.nn.Module):
-    def __init__(self, input_dim,hidden_dim):
-        super(CommitActorNet, self).__init__()
-        self.layer1 = torch.nn.Linear(in_features=input_dim, out_features=hidden_dim)
-        self.layer2 = torch.nn.Linear(in_features=hidden_dim, out_features=hidden_dim)
-        self.outputlayer = torch.nn.Linear(in_features=hidden_dim, out_features=2)
-    def forward(self, x):
-        x = self.layer1(x)
-        x = torch.nn.ReLU()(x)
-        x = self.layer2(x)
-        x = torch.nn.ReLU()(x)
-        x = self.outputlayer(x)
-        x = torch.nn.Softmax(dim=-1)(x)
-        return x
-    
-class UnconstrainedActorNet(torch.nn.Module):
-    def __init__(self, input_dim, output_dim,hidden_dim):
-        super(UnconstrainedActorNet, self).__init__()
-        self.layer1 = torch.nn.Linear(in_features=input_dim, out_features=hidden_dim)
-        self.layer2 = torch.nn.Linear(in_features=hidden_dim, out_features=hidden_dim)
-        self.outputlayer = torch.nn.Linear(in_features=hidden_dim, out_features=output_dim)
-    def forward(self, x):
-        x = self.layer1(x)
-        x = torch.nn.ReLU()(x)
-        x = self.layer2(x)
-        x = torch.nn.ReLU()(x)
-        x = self.outputlayer(x)
-        x = torch.nn.Softmax(dim=-1)(x)
-        return x
-
-class CriticNet(torch.nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        super(CriticNet, self).__init__()
-        self.layer1 = torch.nn.Linear(in_features=input_dim, out_features=hidden_dim)
-        self.layer2 = torch.nn.Linear(in_features=hidden_dim, out_features=hidden_dim)
-        self.outputlayer =  torch.nn.Linear(in_features=hidden_dim, out_features=1)
-    
-    def forward(self, x):
-        x = self.layer1(x)
-        x = torch.nn.ReLU()(x)
-        x = self.layer2(x)
-        x = torch.nn.ReLU()(x)
-        x = self.outputlayer(x)
-        return x
+from utility.agents.decentralized_mixin import DecentralizedAgentMixin
+from utility.agents.nets import SoftmaxNet, CriticNet
 
 
-class DCL_Agent_Grid_Game():
+class DCL_Agent_Grid_Game(DecentralizedAgentMixin):
     def __init__(self, perturb, temperature, hidden_dim, lr_critic, lr_actor, with_constraints, gamma, is_entropy, temperature_decay, action_dim, num_agents, grid_size, device="cpu"):
         self.device = device
         self.gamma = gamma
@@ -75,15 +18,15 @@ class DCL_Agent_Grid_Game():
         self.num_agents = num_agents
 
         # Models for ego agent
-        self.proposing_actor = ProposalActorNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
-        self.commit_actor = CommitActorNet(input_dim=self.state_dim+action_dim*num_agents,hidden_dim=hidden_dim).to(device)
-        self.unconstrained_actor = UnconstrainedActorNet(input_dim=self.state_dim, output_dim=action_dim,hidden_dim=hidden_dim).to(device)
+        self.proposing_actor = SoftmaxNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
+        self.commit_actor = SoftmaxNet(input_dim=self.state_dim+action_dim*num_agents, output_dim=2, hidden_dim=hidden_dim).to(device)
+        self.unconstrained_actor = SoftmaxNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
         self.critic = CriticNet(input_dim=self.state_dim+action_dim*num_agents,hidden_dim=hidden_dim).to(device)
 
         # Models for coplayer agent
-        self.coplayer_proposing_actor = ProposalActorNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
-        self.coplayer_commit_actor = CommitActorNet(input_dim=self.state_dim+action_dim*num_agents,hidden_dim=hidden_dim).to(device)
-        self.coplayer_unconstrained_actor = UnconstrainedActorNet(input_dim=self.state_dim, output_dim=action_dim,hidden_dim=hidden_dim).to(device)
+        self.coplayer_proposing_actor = SoftmaxNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
+        self.coplayer_commit_actor = SoftmaxNet(input_dim=self.state_dim+action_dim*num_agents, output_dim=2, hidden_dim=hidden_dim).to(device)
+        self.coplayer_unconstrained_actor = SoftmaxNet(input_dim=self.state_dim, output_dim=action_dim, hidden_dim=hidden_dim).to(device)
         self.coplayer_critic = CriticNet(input_dim=self.state_dim+action_dim*num_agents,hidden_dim=hidden_dim).to(device)
 
         # Initialize optimizers
@@ -128,10 +71,6 @@ class DCL_Agent_Grid_Game():
             action = F.one_hot(torch.argmax(action_logits,dim=1), num_classes=action_logits.size(-1))
         return action
     
-    def is_commit(self, commitment):
-        unsqueezed_tensor = torch.tensor([0,1],dtype=self.dtype).unsqueeze(1)
-        return torch.matmul(commitment, unsqueezed_tensor)**4 # input: one-hot; output: [1] if commit, [0] if not commit
-
     def update_unconstrained_policy(self, state, self_commitment, coplayer_commitment ,self_action, coplayer_action, entropy_coeff):
         """
         Update policy for each agent
@@ -142,18 +81,10 @@ class DCL_Agent_Grid_Game():
         self_policy_logits = torch.log(self_policy_probs+self.perturb)
         self_action_logit = self_policy_logits[torch.arange(self_policy_logits.shape[0]),self_action.argmax(dim=1)]
         q_a = self.critic(torch.cat((state, self_action, coplayer_action),dim=1)).detach().squeeze()
-        loss_unconstrained_actor = (-q_a * self_action_logit * is_mutual_commitment).mean() 
+        loss_unconstrained_actor = (-q_a * self_action_logit * is_mutual_commitment).mean()
         if self.is_entropy:
-            entropy = -torch.mean(self_policy_probs * torch.log(self_policy_probs + self.perturb))
-            loss_unconstrained_actor -= entropy_coeff * entropy
-        self.unconstrained_actor_optimizer.zero_grad() # Zero the gradients
-        unconstrained_policy_grads = torch.autograd.grad(loss_unconstrained_actor, list(self.unconstrained_actor.parameters())) # Compute the gradients
-        unconstrained_policy_params = list(self.unconstrained_actor.parameters())
-        for layer in range(len(unconstrained_policy_params)):
-            unconstrained_policy_params[layer].grad = unconstrained_policy_grads[layer]
-            unconstrained_policy_params[layer].grad.data.clamp_(-1, 1)
-        # Perform an optimization step
-        self.unconstrained_actor_optimizer.step()
+            loss_unconstrained_actor -= entropy_coeff * self.policy_entropy(self_policy_probs)
+        self.apply_grad_clamped(loss_unconstrained_actor, self.unconstrained_actor, self.unconstrained_actor_optimizer)
 
         """
         update estimate for coplayer
@@ -164,15 +95,8 @@ class DCL_Agent_Grid_Game():
         q_a_coplayer = self.coplayer_critic(torch.cat((state, coplayer_action, self_action),dim=1)).detach().squeeze()
         loss_unconstrained_actor_coplayer = (-q_a_coplayer * coplayer_action_logit * is_mutual_commitment).mean()
         if self.is_entropy:
-            entropy = -torch.mean(coplayer_policy_probs * torch.log(coplayer_policy_probs + self.perturb))
-            loss_unconstrained_actor_coplayer -= entropy_coeff * entropy
-        self.coplayer_unconstrained_actor_optimizer.zero_grad() 
-        unconstrained_policy_grads_coplayer = torch.autograd.grad(loss_unconstrained_actor_coplayer, list(self.coplayer_unconstrained_actor.parameters()))
-        unconstrained_policy_params_coplayer = list(self.coplayer_unconstrained_actor.parameters())
-        for layer in range(len(unconstrained_policy_params_coplayer)):
-            unconstrained_policy_params_coplayer[layer].grad = unconstrained_policy_grads_coplayer[layer]
-            unconstrained_policy_params_coplayer[layer].grad.data.clamp_(-1, 1)
-        self.coplayer_unconstrained_actor_optimizer.step()
+            loss_unconstrained_actor_coplayer -= entropy_coeff * self.policy_entropy(coplayer_policy_probs)
+        self.apply_grad_clamped(loss_unconstrained_actor_coplayer, self.coplayer_unconstrained_actor, self.coplayer_unconstrained_actor_optimizer)
         return 
 
     def update_commitment_policy(self, state, self_proposal, coplayer_proposal, self_commitment, coplayer_commitment, self_action, coplayer_action, entropy_coeff):
@@ -192,17 +116,10 @@ class DCL_Agent_Grid_Game():
 
         commitment_loss = (is_mutual_commitment * (-q_sm * self_commitment_logit + (q_sa-q_sm)*self_is_commitment)+(1-is_mutual_commitment) * (-q_sa * self_commitment_logit)).mean()
         if self.is_entropy:
-            entropy = -torch.mean(self_commitment_probs * torch.log(self_commitment_probs + self.perturb))
-            commitment_loss -= entropy_coeff * entropy
+            commitment_loss -= entropy_coeff * self.policy_entropy(self_commitment_probs)
 
-        self.commit_actor_optimizer.zero_grad() # Zero the gradients
-        commitment_grads = torch.autograd.grad(commitment_loss, list(self.commit_actor.parameters()), retain_graph=True) # Compute the gradients
-        commitment_params = list(self.commit_actor.parameters())
-        for layer in range(len(commitment_params)):
-            commitment_params[layer].grad = commitment_grads[layer]
-            commitment_params[layer].grad.data.clamp_(-1, 1)
-        self.commit_actor_optimizer.step() # Perform an optimization step
-        
+        self.apply_grad_clamped(commitment_loss, self.commit_actor, self.commit_actor_optimizer)
+
         """
         update an estimate for coplayer
         """
@@ -217,15 +134,8 @@ class DCL_Agent_Grid_Game():
         
         commitment_loss_coplayer = (is_mutual_commitment * (-q_sm_coplayer * coplayer_commitment_logit + (q_sa_coplayer-q_sm_coplayer)*coplayer_is_commitment)+(1-is_mutual_commitment) * (-q_sa_coplayer * coplayer_commitment_logit)).mean()
         if self.is_entropy:
-            entropy = -torch.mean(coplayer_commitment_probs * torch.log(coplayer_commitment_probs + self.perturb))
-            commitment_loss_coplayer -= entropy_coeff * entropy
-        self.coplayer_commit_actor_optimizer.zero_grad()
-        commitment_grads_coplayer = torch.autograd.grad(commitment_loss_coplayer, list(self.coplayer_commit_actor.parameters()), retain_graph=True)
-        commitment_params_coplayer = list(self.coplayer_commit_actor.parameters())
-        for layer in range(len(commitment_params_coplayer)):
-            commitment_params_coplayer[layer].grad = commitment_grads_coplayer[layer]
-            commitment_params_coplayer[layer].grad.data.clamp_(-1, 1)
-        self.coplayer_commit_actor_optimizer.step()
+            commitment_loss_coplayer -= entropy_coeff * self.policy_entropy(coplayer_commitment_probs)
+        self.apply_grad_clamped(commitment_loss_coplayer, self.coplayer_commit_actor, self.coplayer_commit_actor_optimizer)
         return 
 
     def update_proposal_policy(self, state, entropy_coeff):
@@ -269,18 +179,12 @@ class DCL_Agent_Grid_Game():
         if self.with_constraints==True:
             proposal_loss += torch.abs((q_sa-q_sm))*torch.maximum((q_sa-q_sm),torch.tensor(0.0))*self_proposal_logit
             proposal_loss += torch.abs((q_sa_coplayer-q_sm_coplayer))*torch.maximum((q_sa_coplayer-q_sm_coplayer),torch.tensor(0.0))*self_proposal_logit
-        if self.is_entropy: # Get entropy of the proposal network
-            entropy = -torch.mean(self_proposal_probs * torch.log(self_proposal_probs + self.perturb))
-            proposal_loss = proposal_loss.mean()- entropy_coeff * entropy
+        if self.is_entropy:
+            proposal_loss = proposal_loss.mean() - entropy_coeff * self.policy_entropy(self_proposal_probs)
         else:
             proposal_loss = proposal_loss.mean()
-        
-        proposal_grads = torch.autograd.grad(proposal_loss, list(self.proposing_actor.parameters()),retain_graph=True) # Compute the gradients
-        proposal_params = list(self.proposing_actor.parameters())
-        for layer in range(len(proposal_params)):
-            proposal_params[layer].grad = proposal_grads[layer]
-            proposal_params[layer].grad.data.clamp_(-1, 1)
-        self.proposing_actor_optimizer.step() # Perform an optimization step
+
+        self.apply_grad_clamped(proposal_loss, self.proposing_actor, self.proposing_actor_optimizer, retain_graph=True)
 
         """
         update estimate for coplayer
@@ -293,16 +197,10 @@ class DCL_Agent_Grid_Game():
             proposal_loss_coplayer += torch.abs((q_sa_coplayer-q_sm_coplayer))*torch.maximum((q_sa_coplayer-q_sm_coplayer),torch.tensor(0.0))*coplayer_proposal_logit
             proposal_loss_coplayer += torch.abs((q_sa-q_sm))*torch.maximum((q_sa-q_sm),torch.tensor(0.0))*coplayer_proposal_logit
         if self.is_entropy:
-            entropy = -torch.mean(coplayer_proposal_probs * torch.log(coplayer_proposal_probs + self.perturb))
-            proposal_loss_coplayer = proposal_loss_coplayer.mean()- entropy_coeff * entropy
+            proposal_loss_coplayer = proposal_loss_coplayer.mean() - entropy_coeff * self.policy_entropy(coplayer_proposal_probs)
         else:
             proposal_loss_coplayer = proposal_loss_coplayer.mean()
-        proposal_grads_coplayer = torch.autograd.grad(proposal_loss_coplayer, list(self.coplayer_proposing_actor.parameters()),retain_graph=True)
-        proposal_params_coplayer = list(self.coplayer_proposing_actor.parameters())
-        for layer in range(len(proposal_params_coplayer)):
-            proposal_params_coplayer[layer].grad = proposal_grads_coplayer[layer]
-            proposal_params_coplayer[layer].grad.data.clamp_(-1, 1)
-        self.coplayer_proposing_actor_optimizer.step()
+        self.apply_grad_clamped(proposal_loss_coplayer, self.coplayer_proposing_actor, self.coplayer_proposing_actor_optimizer)
 
         self.temperature = np.maximum(1.0, self.temperature - self.temperature_decay)
 
@@ -310,33 +208,15 @@ class DCL_Agent_Grid_Game():
         """
         Update critic Q^i(s,a^i,a^j)
         """
-        # Compute the actual value
-        is_mutual_commitment_expanded = is_mutual_commitment.expand(-1, self_proposal.shape[1])
-        real_action = is_mutual_commitment_expanded * self_proposal + (1-is_mutual_commitment_expanded) * self_action
-        real_coplayer_action = is_mutual_commitment_expanded * coplayer_proposal + (1-is_mutual_commitment_expanded) * coplayer_action
-        actual_value = self.critic(torch.cat((state, real_action, real_coplayer_action),dim=1)).squeeze()
+        real_self, real_cp = self.mixed_joint_actions(
+            self_proposal, coplayer_proposal, self_action, coplayer_action, is_mutual_commitment,
+        )
+        actual_value = self.critic(torch.cat((state, real_self, real_cp), dim=1)).squeeze()
         target_value = self_return.squeeze()
+        critic_loss = torch.nn.functional.mse_loss(actual_value, target_value)
+        self.apply_grad_clamped(critic_loss, self.critic, self.critic_optimizer)
 
-        loss_func = torch.nn.MSELoss()
-        critic_loss = loss_func(actual_value, target_value)
-        self.critic_optimizer.zero_grad()  #  Zero the gradients       
-        critic_grads = torch.autograd.grad(critic_loss, list(self.critic.parameters())) # Compute the gradients
-        critic_params = list(self.critic.parameters())
-        for layer in range(len(critic_params)):
-            critic_params[layer].grad = critic_grads[layer]
-            critic_params[layer].grad.data.clamp_(-1, 1)
-        self.critic_optimizer.step()
-
-        """
-        Update for coplayer
-        """
-        actual_value_coplayer = self.coplayer_critic(torch.cat((state, real_coplayer_action, real_action),dim=1)).squeeze()
+        actual_value_coplayer = self.coplayer_critic(torch.cat((state, real_cp, real_self), dim=1)).squeeze()
         target_value_coplayer = coplayer_return.squeeze()
-        critic_loss_coplayer = loss_func(actual_value_coplayer, target_value_coplayer)
-        self.coplayer_critic_optimizer.zero_grad()
-        critic_grads_coplayer = torch.autograd.grad(critic_loss_coplayer, list(self.coplayer_critic.parameters()))
-        critic_params_coplayer = list(self.coplayer_critic.parameters())
-        for layer in range(len(critic_params_coplayer)):
-            critic_params_coplayer[layer].grad = critic_grads_coplayer[layer]
-            critic_params_coplayer[layer].grad.data.clamp_(-1, 1)
-        self.coplayer_critic_optimizer.step()
+        critic_loss_coplayer = torch.nn.functional.mse_loss(actual_value_coplayer, target_value_coplayer)
+        self.apply_grad_clamped(critic_loss_coplayer, self.coplayer_critic, self.coplayer_critic_optimizer)

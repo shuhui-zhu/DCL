@@ -1,0 +1,38 @@
+defaults:
+  - _self_
+
+# Environment / experiment
+game: IPD
+array_task_id: 0
+with_constraints: true
+
+# Training (legacy decentralized argparse used gamma=1)
+gamma: 1.0
+max_steps: 1
+batch_size: 128
+N_iterations: 10000
+num_iter_per_batch: 1
+mega_step: 1
+
+# Model
+hidden_dim: 8
+lr_critic: 7.0e-4
+lr_actor: 4.0e-4
+
+# Exploration / regularization
+temperature: 10.0
+temperature_decay: 0.05
+is_entropy: true
+entropy_coeff: 1.0
+entropy_coeff_decay: 0.0005
+epsilon: 0.0
+epsilon_decay: 0.0
+perturb: 1.0e-3
+
+# Grid game
+grid_size: 4
+
+# Logging
+wandb:
+  project: DCL-decentralized
+  mode: disabled
