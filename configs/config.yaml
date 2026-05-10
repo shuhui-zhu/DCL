@@ -1,0 +1,36 @@
+defaults:
+  - _self_
+
+# Environment / experiment
+game: IPD              # Game name: IPD, IPC, or Grid
+array_task_id: 0       # Array task id in slurm
+with_constraints: true # Whether to use IC constraints or not
+
+# Training
+gamma: 0.99            # Discount factor
+max_steps: 1           # Number of steps in each episode
+batch_size: 128        # Batch size
+N_iterations: 10000    # Number of iterations to train the model
+num_iter_per_batch: 1  # Number of updates per iteration
+mega_step: 1           # Number of steps specified in a proposal
+
+# Model
+hidden_dim: 8          # Hidden dimension of the neural network
+lr_critic: 7e-4        # Learning rate of the critic
+lr_actor: 4e-4         # Learning rate of the actor
+
+# Exploration / regularization
+temperature: 10.0           # Temperature for the softmax
+temperature_decay: 0.05     # Temperature decay
+is_entropy: true            # Whether to use entropy regularization
+entropy_coeff: 1.0          # Entropy regularization coefficient
+entropy_coeff_decay: 0.0005 # Entropy regularization coefficient decay
+perturb: 1.0e-3             # Perturbation for probs (avoid numerical issues)
+
+# Grid game
+grid_size: 4           # Grid size for the grid game
+
+# Logging
+wandb:
+  project: DCL
+  mode: disabled       # online | offline | disabled

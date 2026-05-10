@@ -1,73 +1,59 @@
 # Differentiable Commitment Learning
 This repository implements DCL ([AISTATS 2025](https://virtual.aistats.org/Conferences/2025)) in our paper [Learning to Negotiate via Voluntary  Commitment](https://arxiv.org/abs/2503.03866).
 
+![Markov Commitment Game (MCG)](https://shuhui-zhu.github.io/images/MCG.jpg)
+
 ## Set Up
 
 * Clone this repository.
 
 * Set up the virtual environment.
 
-  ``` 
+  ```
   conda create -n virtual_env python=3.10.9
   conda activate virtual_env
-  pip install -r requirement.txt
+  pip install -r requirements.txt
   ```
 
 ## Navigation
 
-The implementation of DCL is in `main` branch, decentralized DCL is in `decentralized_dcl` branch.
+The implementation of DCL is in the `main` branch; decentralized DCL is in the `decentralized_dcl` branch.
 
-* `env/`: includes Prisoner's Dilemma, Repeated Purely Conflicting Game and Grid Game.
-
-* `trainer`: includes DCL trainer of each game. 
-* `utility`: includes replay buffer class, DCL agent class of each game.
-* `main.py`: the runner file for implementing the algorithm with specified hyperparameters. 
+* `env/` — Prisoner's Dilemma, Repeated Purely Conflicting Game, and Grid Game.
+* `trainer/` — DCL trainers.
+  * `base_trainer.py` — `BaseDCLTrainer` with the shared episode loop, replay-buffer setup, and per-batch update logic.
+  * `dcl_repeated_games.py` / `dcl_grid_game.py` — thin subclasses that build the env / agents and add game-specific wandb diagnostics.
+* `utility/`
+  * `buffer_class.py` — replay buffer.
+  * `agents/nets.py` — shared `SoftmaxNet` and `CriticNet` MLPs.
+  * `agents/base_agent.py` — `DCL_Agent` with all algorithmic logic (critic / unconstrained / commitment / proposal updates).
+  * `agents/agent_class_repeated_games.py` and `agents/agent_class_grid_game.py` — thin game-specific subclasses.
+* `configs/config.yaml` — Hydra config holding all hyperparameters (game, model, training, logging).
+* `main.py` — Hydra entry point that wires the config to the trainers.
 
 ## Running Experiments
 
+All hyperparameters live in [`configs/config.yaml`](configs/config.yaml) and are loaded with [Hydra](https://hydra.cc). Edit that file to set the game, model, and training options, then run:
+
 ```
-python main.py --game "your_game_name" --with_constraints "with_or_without_IC"
+python main.py
 ```
 
-### Examples
+Use `with_constraints: true` for DCL-IC or `with_constraints: false` for plain DCL. To reproduce the settings in the paper [Learning to Negotiate via Voluntary Commitment](https://arxiv.org/abs/2503.03866) (Appendix D), use the values below for each game:
 
-Follow the examples for implementating DCL and DCL-IC. To reproduce results in  the paper [Learning to Negotiate via Voluntary  Commitment](https://arxiv.org/abs/2503.03866), please use the hyperparameter set in supplementary materials (Appendix D). 
+| Game | `game` | `max_steps` | `mega_step` | `batch_size` | `entropy_coeff` | `temperature` |
+|---|---|---:|---:|---:|---:|---:|
+| Prisoner's Dilemma | `IPD` | 1 | 1 | 128 | 1.0 | 10.0 |
+| Repeated Purely Conflicting Game | `IPC` | 16 | 2 | 512 | 2.0 | 1.0 |
+| Grid Game | `Grid` | 16 | 1 | 512 | 2.0 | 1.0 |
 
-* Train DCL on Prisoner's Dilemma
+If you'd rather not edit the file, any field can also be overridden on the command line using Hydra's `field=value` syntax (note `=`, not `--`):
 
-  ```
-  python main.py --game "IPD" --with_constraints "n" --batch_size 128
-  ```
+```
+python main.py game=IPC with_constraints=true max_steps=16 mega_step=2 batch_size=512 entropy_coeff=2.0 temperature=1.0
+```
 
-* Train DCL-IC on Prisoner's Dilemma 
-
-  ```
-  python main.py --game "IPD" --with_constraints "y" --batch_size 128
-  ```
-
-* Train DCL on Repeated Purely Conflicting Game
-
-  ```
-  python main.py --game "IPC" --with_constraints "n" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-  ```
-
-* Train DCL-IC on Repeated Purely Conflicting Game
-
-  ```
-  python main.py --game "IPC" --with_constraints "y" --max_steps 16 --mega_step 2 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-  ```
-
-* Train DCL on Grid Game
-
-  ```
-  python main.py --game "Grid" --with_constraints "n" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-  ```
-
-* Train DCL-IC on Grid Game
-
-  ```
-  python main.py --game "Grid" --with_constraints "y" --max_steps 16 --mega_step 1 --batch_size 512 --entropy_coeff 2.0 --temperature 1.0
-  ```
+> By default Hydra creates a per-run output directory under `outputs/YYYY-MM-DD/HH-MM-SS/`. Add `hydra.run.dir=.` to the command to keep runs in the project root.
 
 ## Citation
 
